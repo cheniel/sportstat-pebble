@@ -1,8 +1,8 @@
 {
   "uuid": "fe649006-bd16-4f05-a0c3-060750535107",
-  "shortName": "sportstat",
-  "longName": "sportstat",
-  "companyName": "MakeAwesomeHappen",
+  "shortName": "SportStat",
+  "longName": "SportStat",
+  "companyName": "SportStat",
   "versionCode": 1,
   "versionLabel": "1.0",
   "watchapp": {
@@ -12,6 +12,18 @@
     "dummy": 0
   },
   "resources": {
-    "media": []
+    "media": [
+      {
+        "type": "png",
+        "name": "ICON",
+        "file": "icon.png",
+        "menuIcon" : true
+      },
+      {
+        "type": "png",
+        "name": "BASKETBALL",
+        "file": "basketball.png"
+      }
+    ]
   }
 }
