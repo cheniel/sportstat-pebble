@@ -1,6 +1,8 @@
 # Ignore build generated files
 build
 
+.lock-waf_darwin_build
+
 # Object files
 *.o
 *.ko
