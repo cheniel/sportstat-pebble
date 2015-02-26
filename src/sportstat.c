@@ -12,7 +12,8 @@
 #include <pebble.h>
 
 // ---------------- Local includes  e.g., "file.h"
-#include "idle.h"
+#include "idle_window.h"
+#include "messaging.h"
 
 // ---------------- Constant definitions
 #define ANIMATED true
@@ -30,6 +31,7 @@ static Window* idle_window;
 /* ========================================================================== */
 
 static void init(void) {
+  init_app_messaging();
   idle_window = get_idle_window();
   window_stack_push(idle_window, ANIMATED);
 }

@@ -1,6 +1,6 @@
 /* ========================================================================== */
 /*
- * idle.c
+ * idle_window.c
  *
  * Project Name: SportStat
  */
@@ -12,7 +12,7 @@
 #include <pebble.h>
 
 // ---------------- Local includes  e.g., "file.h"
-#include "idle.h"
+#include "idle_window.h"
 
 // ---------------- Constant definitions
 #define WAITING_TEXT "Start game on \nAndroid App"
