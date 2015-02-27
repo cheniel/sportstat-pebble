@@ -19,18 +19,25 @@
 #define DIVIDER_Y 0
 #define DIVIDER_WIDTH 2
 
-#define LABEL_TEXT_X DIVIDER_X + 10
 #define LABEL_FONT fonts_get_system_font(FONT_KEY_GOTHIC_24)
-#define ASSIST_TEXT "Assist"
-#define ASSIST_TEXT_Y 6
-#define ASSIST_TEXT_HEIGHT 30
-#define TWO_PT_TEXT "Two point"
-#define TWO_PT_TEXT_Y 62
-#define TWO_PT_TEXT_HEIGHT 30
-#define THREE_PT_TEXT "Three point"
-#define THREE_PT_TEXT_Y 118
-#define THREE_PT_TEXT_HEIGHT 30
+#define LABEL_TEXT_X DIVIDER_X + 10
+#define ASSIST_LABEL "Assist"
+#define ASSIST_LABEL_Y 6
+#define ASSIST_LABEL_HEIGHT 30
+#define TWO_PT_LABEL "Two point"
+#define TWO_PT_LABEL_Y 62
+#define TWO_PT_LABEL_HEIGHT 30
+#define THREE_PT_LABEL "Three point"
+#define THREE_PT_LABEL_Y 118
+#define THREE_PT_LABEL_HEIGHT 30
 
+#define POINT_FONT fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK)
+#define POINT_TEXT_X 0
+#define POINT_TEXT_WIDTH DIVIDER_X
+#define POINT_TEXT_HEIGHT 42
+#define ASSIST_Y 3
+#define TWO_PT_Y 59
+#define THREE_PT_Y 115
 
 // ---------------- Macro definitions
 
@@ -41,6 +48,9 @@ static Layer *window_layer;
 static GRect bounds;
 static InverterLayer* divider;
 
+static TextLayer* assist_label;
+static TextLayer* two_pt_label;
+static TextLayer* three_pt_label;
 static TextLayer* assist_text;
 static TextLayer* two_pt_text;
 static TextLayer* three_pt_text;
@@ -52,6 +62,7 @@ static int three_pointers = 0;
 static void load(Window *window);
 static void unload(Window *window);
 static void add_label_text(Layer* window_layer);
+static void add_point_text(Layer* window_layer);
 static void add_divider(Layer* window_layer);
 static void refresh_points();
 
@@ -71,11 +82,15 @@ static void load(Window *window) {
     window_layer = window_get_root_layer(window);
     bounds = layer_get_bounds(window_layer);
 
+    add_point_text(window_layer);
     add_label_text(window_layer);
     add_divider(window_layer);
 }
 
 static void unload(Window *window) {
+    text_layer_destroy(assist_label);
+    text_layer_destroy(two_pt_label);
+    text_layer_destroy(three_pt_label);
     text_layer_destroy(assist_text);
     text_layer_destroy(two_pt_text);
     text_layer_destroy(three_pt_text);
@@ -95,31 +110,59 @@ static void refresh_points() {
 
 }
 
-static void add_label_text(Layer* window_layer) {
-    assist_text = text_layer_create((GRect) {
-        .origin = { LABEL_TEXT_X, ASSIST_TEXT_Y },
-        .size = { bounds.size.w, ASSIST_TEXT_HEIGHT }
+static void add_point_text(Layer* window_layer) {
+    assist_text= text_layer_create((GRect) {
+        .origin = { POINT_TEXT_X, ASSIST_Y },
+        .size = { POINT_TEXT_WIDTH, POINT_TEXT_HEIGHT }
     });
-    text_layer_set_text(assist_text, ASSIST_TEXT);
-    text_layer_set_font(assist_text, LABEL_FONT);
+    text_layer_set_text(assist_text, "10");
+    text_layer_set_font(assist_text, POINT_FONT);
+    text_layer_set_text_alignment(assist_text, GTextAlignmentCenter);
     layer_add_child(window_layer, text_layer_get_layer(assist_text));
 
     two_pt_text = text_layer_create((GRect) {
-        .origin = { LABEL_TEXT_X, TWO_PT_TEXT_Y },
-        .size = { bounds.size.w, TWO_PT_TEXT_HEIGHT }
+        .origin = { POINT_TEXT_X, TWO_PT_Y },
+        .size = { POINT_TEXT_WIDTH, POINT_TEXT_HEIGHT }
     });
-    text_layer_set_text(two_pt_text, TWO_PT_TEXT);
-    text_layer_set_font(two_pt_text, LABEL_FONT);
+    text_layer_set_text(two_pt_text, "10");
+    text_layer_set_font(two_pt_text, POINT_FONT);
+    text_layer_set_text_alignment(two_pt_text, GTextAlignmentCenter);
     layer_add_child(window_layer, text_layer_get_layer(two_pt_text));
 
     three_pt_text = text_layer_create((GRect) {
-        .origin = { LABEL_TEXT_X, THREE_PT_TEXT_Y },
-        .size = { bounds.size.w, THREE_PT_TEXT_HEIGHT }
+        .origin = { POINT_TEXT_X, THREE_PT_Y },
+        .size = { POINT_TEXT_WIDTH, POINT_TEXT_HEIGHT }
     });
-    text_layer_set_text(three_pt_text, THREE_PT_TEXT);
-    text_layer_set_font(three_pt_text, LABEL_FONT);
+    text_layer_set_text(three_pt_text, "10");
+    text_layer_set_font(three_pt_text, POINT_FONT);
+    text_layer_set_text_alignment(three_pt_text, GTextAlignmentCenter);
     layer_add_child(window_layer, text_layer_get_layer(three_pt_text));
+}
 
+static void add_label_text(Layer* window_layer) {
+    assist_label= text_layer_create((GRect) {
+        .origin = { LABEL_TEXT_X, ASSIST_LABEL_Y },
+        .size = { bounds.size.w, ASSIST_LABEL_HEIGHT }
+    });
+    text_layer_set_text(assist_label, ASSIST_LABEL);
+    text_layer_set_font(assist_label, LABEL_FONT);
+    layer_add_child(window_layer, text_layer_get_layer(assist_label));
+
+    two_pt_label = text_layer_create((GRect) {
+        .origin = { LABEL_TEXT_X, TWO_PT_LABEL_Y },
+        .size = { bounds.size.w, TWO_PT_LABEL_HEIGHT }
+    });
+    text_layer_set_text(two_pt_label, TWO_PT_LABEL);
+    text_layer_set_font(two_pt_label, LABEL_FONT);
+    layer_add_child(window_layer, text_layer_get_layer(two_pt_label));
+
+    three_pt_label = text_layer_create((GRect) {
+        .origin = { LABEL_TEXT_X, THREE_PT_LABEL_Y },
+        .size = { bounds.size.w, THREE_PT_LABEL_HEIGHT }
+    });
+    text_layer_set_text(three_pt_label, THREE_PT_LABEL);
+    text_layer_set_font(three_pt_label, LABEL_FONT);
+    layer_add_child(window_layer, text_layer_get_layer(three_pt_label));
 }
 
 static void add_divider(Layer* window_layer) {
