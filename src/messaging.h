@@ -19,5 +19,6 @@
 
 // ---------------- Prototypes/Macros
 void init_app_messaging();
+void send_data_to_mobile(int assists, int two_pts, int three_pts);
 
 #endif // MESSAGING_H

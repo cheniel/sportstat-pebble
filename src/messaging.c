@@ -21,7 +21,8 @@
 #define MSG_TWO_POINT_COUNT 2
 #define MSG_THREE_POINT_COUNT 3
 #define MSG_GAME_END 4
-#define MSG_IS_GAME_ACTIVE 5
+#define MSG_GAME_CANCELLED 5
+#define MSG_REQUEST_RESPONSE 6
 
 // ---------------- Macro definitions
 
@@ -36,8 +37,18 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 static void inbox_dropped_callback(AppMessageResult reason, void *context);
 static void outbox_fail_handler(DictionaryIterator *iterator, AppMessageResult reason, void *context);
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context);
+static void request_response();
 
 /* ========================================================================== */
+
+void send_data_to_mobile(int assists, int two_pts, int three_pts) {
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    dict_write_int(iter, MSG_ASSIST_COUNT, &assists, sizeof(assists), false);
+    dict_write_int(iter, MSG_TWO_POINT_COUNT, &two_pts, sizeof(two_pts), false);
+    dict_write_int(iter, MSG_THREE_POINT_COUNT, &three_pts, sizeof(three_pts), false);
+    app_message_outbox_send();
+}
 
 static char *translate_error(AppMessageResult result) {
     switch (result) {
@@ -66,6 +77,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *t = dict_read_first(iterator);
 
     bool received_score_data = false;
+
     int assist_count = 0;
     int two_pt_count = 0;
     int three_pt_count = 0;
@@ -119,9 +131,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         }
         update_game_window(assist_count, two_pt_count, three_pt_count);
     }
-    assist_count++;
-    two_pt_count++;
-    three_pt_count++;
+
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -133,12 +143,21 @@ static void outbox_fail_handler(DictionaryIterator *iterator,
     APP_LOG(APP_LOG_LEVEL_ERROR, "Message failed: %s", translate_error(reason));
     // if (reason != APP_MSG_OK) {
         // TODO: go to disconnected screen
+        // only if game window is not null!
     // }
 }
 
 static void outbox_sent_handler(DictionaryIterator *iterator,
                          void *context) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Message sent!");
+}
+
+static void request_response() {
+    int dummy = 0;
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    dict_write_int(iter, MSG_REQUEST_RESPONSE, &dummy, sizeof(dummy), false);
+    app_message_outbox_send();
 }
 
 void init_app_messaging() {
@@ -149,6 +168,5 @@ void init_app_messaging() {
     app_message_open(app_message_inbox_size_maximum(),
                    app_message_outbox_size_maximum());
 
-    // TODO: request if game is active
-    // make sure to correctly handle case where app is not open.
+    request_response();
 }

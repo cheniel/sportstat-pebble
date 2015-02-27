@@ -13,6 +13,7 @@
 
 // ---------------- Local includes  e.g., "file.h"
 #include "game_window.h"
+#include "messaging.h"
 
 // ---------------- Constant definitions
 #define DIVIDER_X 50
@@ -23,10 +24,10 @@
 #define LABEL_TEXT_X DIVIDER_X + 10
 #define LABEL_TEXT_HEIGHT 30
 #define ASSIST_LABEL "Assist"
-#define ASSIST_LABEL_Y 6
 #define TWO_PT_LABEL "Two point"
-#define TWO_PT_LABEL_Y 62
 #define THREE_PT_LABEL "Three point"
+#define ASSIST_LABEL_Y 6
+#define TWO_PT_LABEL_Y 62
 #define THREE_PT_LABEL_Y 118
 
 #define POINT_FONT fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK)
@@ -74,7 +75,6 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context);
 static void up_long_click_handler(ClickRecognizerRef recognizer, void *context);
 static void select_long_click_handler(ClickRecognizerRef recognizer, void *context);
 static void down_long_click_handler(ClickRecognizerRef recognizer, void *context);
-
 
 /* ========================================================================== */
 
@@ -201,16 +201,19 @@ static void click_config_provider(void *context) {
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     assists++;
     refresh_points();
+    send_data_to_mobile(assists, two_pointers, three_pointers);
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     two_pointers++;
     refresh_points();
+    send_data_to_mobile(assists, two_pointers, three_pointers);
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     three_pointers++;
     refresh_points();
+    send_data_to_mobile(assists, two_pointers, three_pointers);
 }
 
 static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -218,6 +221,7 @@ static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) 
         assists--;
         refresh_points();
         vibes_short_pulse();
+        send_data_to_mobile(assists, two_pointers, three_pointers);
     }
 }
 
@@ -226,6 +230,7 @@ static void select_long_click_handler(ClickRecognizerRef recognizer, void *conte
         two_pointers--;
         refresh_points();
         vibes_short_pulse();
+        send_data_to_mobile(assists, two_pointers, three_pointers);
     }
 }
 
@@ -234,6 +239,7 @@ static void down_long_click_handler(ClickRecognizerRef recognizer, void *context
         three_pointers--;
         refresh_points();
         vibes_short_pulse();
+        send_data_to_mobile(assists, two_pointers, three_pointers);
     }
 }
 
