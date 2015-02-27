@@ -14,6 +14,7 @@
 // ---------------- Local includes  e.g., "file.h"
 #include "messaging.h"
 #include "game_window.h"
+#include "summary_window.h"
 
 // ---------------- Constant definitions
 #define MSG_GENERIC_STRING 0
@@ -25,12 +26,16 @@
 #define MSG_REQUEST_RESPONSE 6
 #define MSG_INITIAL_POINTS_LOAD 7
 
+#define GAME_END_MESSAGE "Game ended!"
+#define DISCONNECTED_MESSAGE "Disconnected."
+
 // ---------------- Macro definitions
 
 // ---------------- Structures/Types
 
 // ---------------- Private variables
 static Window* game_window = NULL;
+static Window* summary_window = NULL;
 
 // ---------------- Private prototypes
 static char *translate_error(AppMessageResult result);
@@ -39,8 +44,20 @@ static void inbox_dropped_callback(AppMessageResult reason, void *context);
 static void outbox_fail_handler(DictionaryIterator *iterator, AppMessageResult reason, void *context);
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context);
 static void request_response();
+static void open_summary_window(char* message);
 
 /* ========================================================================== */
+
+void init_app_messaging() {
+    app_message_register_inbox_received(inbox_received_callback);
+    app_message_register_inbox_dropped(inbox_dropped_callback);
+    app_message_register_outbox_failed(outbox_fail_handler);
+    app_message_register_outbox_sent(outbox_sent_handler);
+    app_message_open(app_message_inbox_size_maximum(),
+                   app_message_outbox_size_maximum());
+
+    request_response();
+}
 
 void send_data_to_mobile(int assists, int two_pts, int three_pts) {
     DictionaryIterator *iter;
@@ -51,24 +68,12 @@ void send_data_to_mobile(int assists, int two_pts, int three_pts) {
     app_message_outbox_send();
 }
 
-static char *translate_error(AppMessageResult result) {
-    switch (result) {
-        case APP_MSG_OK: return "APP_MSG_OK";
-        case APP_MSG_SEND_TIMEOUT: return "APP_MSG_SEND_TIMEOUT";
-        case APP_MSG_SEND_REJECTED: return "APP_MSG_SEND_REJECTED";
-        case APP_MSG_NOT_CONNECTED: return "APP_MSG_NOT_CONNECTED";
-        case APP_MSG_APP_NOT_RUNNING: return "APP_MSG_APP_NOT_RUNNING";
-        case APP_MSG_INVALID_ARGS: return "APP_MSG_INVALID_ARGS";
-        case APP_MSG_BUSY: return "APP_MSG_BUSY";
-        case APP_MSG_BUFFER_OVERFLOW: return "APP_MSG_BUFFER_OVERFLOW";
-        case APP_MSG_ALREADY_RELEASED: return "APP_MSG_ALREADY_RELEASED";
-        case APP_MSG_CALLBACK_ALREADY_REGISTERED: return "APP_MSG_CALLBACK_ALREADY_REGISTERED";
-        case APP_MSG_CALLBACK_NOT_REGISTERED: return "APP_MSG_CALLBACK_NOT_REGISTERED";
-        case APP_MSG_OUT_OF_MEMORY: return "APP_MSG_OUT_OF_MEMORY";
-        case APP_MSG_CLOSED: return "APP_MSG_CLOSED";
-        case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
-        default: return "UNKNOWN ERROR";
-    }
+static void request_response() {
+    int dummy = 0;
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    dict_write_int(iter, MSG_REQUEST_RESPONSE, &dummy, sizeof(dummy), false);
+    app_message_outbox_send();
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
@@ -117,10 +122,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 break;
 
             case MSG_GAME_END:
-                window_stack_pop(false);
-                window_destroy(game_window);
-                game_window = NULL;
-                // TODO: go to end game screen
+                open_summary_window(GAME_END_MESSAGE);
                 break;
 
             case MSG_INITIAL_POINTS_LOAD:
@@ -145,6 +147,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         // open game window if it's not up
         if (game_window == NULL) {
             window_stack_pop(false);
+
+            if (summary_window != NULL) {
+                window_destroy(summary_window);
+                summary_window = NULL;
+            }
+
             game_window = get_game_window();
             window_stack_push(game_window, true);
         }
@@ -163,11 +171,14 @@ static void inbox_dropped_callback(AppMessageResult reason, void *context) {
 static void outbox_fail_handler(DictionaryIterator *iterator,
                          AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Message failed: %s", translate_error(reason));
-    // if (reason != APP_MSG_OK) {
-        // TODO: go to disconnected screen
-        // only if game window is not null!
-        // also need to handle APP_MSG_BUSY, needs to be resent.
-    // }
+
+    if (reason != APP_MSG_OK && game_window != NULL) {
+        if (reason == APP_MSG_BUSY ) {
+            request_game_window_send();
+        } else {
+            open_summary_window(DISCONNECTED_MESSAGE);
+        }
+    }
 }
 
 static void outbox_sent_handler(DictionaryIterator *iterator,
@@ -175,21 +186,32 @@ static void outbox_sent_handler(DictionaryIterator *iterator,
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Message sent!");
 }
 
-static void request_response() {
-    int dummy = 0;
-    DictionaryIterator *iter;
-    app_message_outbox_begin(&iter);
-    dict_write_int(iter, MSG_REQUEST_RESPONSE, &dummy, sizeof(dummy), false);
-    app_message_outbox_send();
+static void open_summary_window(char* message) {
+    window_stack_pop(false);
+    if (game_window != NULL) {
+        window_destroy(game_window);
+        game_window = NULL;
+    }
+    summary_window = get_summary_window(message);
+    window_stack_push(summary_window, true);
 }
 
-void init_app_messaging() {
-    app_message_register_inbox_received(inbox_received_callback);
-    app_message_register_inbox_dropped(inbox_dropped_callback);
-    app_message_register_outbox_failed(outbox_fail_handler);
-    app_message_register_outbox_sent(outbox_sent_handler);
-    app_message_open(app_message_inbox_size_maximum(),
-                   app_message_outbox_size_maximum());
-
-    request_response();
+static char *translate_error(AppMessageResult result) {
+    switch (result) {
+        case APP_MSG_OK: return "APP_MSG_OK";
+        case APP_MSG_SEND_TIMEOUT: return "APP_MSG_SEND_TIMEOUT";
+        case APP_MSG_SEND_REJECTED: return "APP_MSG_SEND_REJECTED";
+        case APP_MSG_NOT_CONNECTED: return "APP_MSG_NOT_CONNECTED";
+        case APP_MSG_APP_NOT_RUNNING: return "APP_MSG_APP_NOT_RUNNING";
+        case APP_MSG_INVALID_ARGS: return "APP_MSG_INVALID_ARGS";
+        case APP_MSG_BUSY: return "APP_MSG_BUSY";
+        case APP_MSG_BUFFER_OVERFLOW: return "APP_MSG_BUFFER_OVERFLOW";
+        case APP_MSG_ALREADY_RELEASED: return "APP_MSG_ALREADY_RELEASED";
+        case APP_MSG_CALLBACK_ALREADY_REGISTERED: return "APP_MSG_CALLBACK_ALREADY_REGISTERED";
+        case APP_MSG_CALLBACK_NOT_REGISTERED: return "APP_MSG_CALLBACK_NOT_REGISTERED";
+        case APP_MSG_OUT_OF_MEMORY: return "APP_MSG_OUT_OF_MEMORY";
+        case APP_MSG_CLOSED: return "APP_MSG_CLOSED";
+        case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
+        default: return "UNKNOWN ERROR";
+    }
 }
