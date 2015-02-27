@@ -116,9 +116,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             window_stack_pop(false);
             game_window = get_game_window();
             window_stack_push(game_window, true);
-        } else {
-            // TODO: update score
         }
+        update_game_window(assist_count, two_pt_count, three_pt_count);
     }
     assist_count++;
     two_pt_count++;
