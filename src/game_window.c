@@ -67,11 +67,20 @@ static void add_label_text(Layer* window_layer);
 static void add_point_text(Layer* window_layer);
 static void add_divider(Layer* window_layer);
 static void refresh_points();
+static void click_config_provider(void *context);
+static void up_click_handler(ClickRecognizerRef recognizer, void *context);
+static void select_click_handler(ClickRecognizerRef recognizer, void *context);
+static void down_click_handler(ClickRecognizerRef recognizer, void *context);
+static void up_long_click_handler(ClickRecognizerRef recognizer, void *context);
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context);
+static void down_long_click_handler(ClickRecognizerRef recognizer, void *context);
+
 
 /* ========================================================================== */
 
 Window *get_game_window() {
     Window *game_window = window_create();
+    window_set_click_config_provider(game_window, click_config_provider);
     window_set_window_handlers(game_window, (WindowHandlers) {
         .load = load,
         .unload = unload,
@@ -109,9 +118,10 @@ void update_game_window(int num_assists, int num_two_pointers,
 }
 
 static void refresh_points() {
-    snprintf(assist_text, MAX_DIGITS, "%d", assists);
-    snprintf(two_pt_text, MAX_DIGITS, "%d", two_pointers);
-    snprintf(three_pt_text, MAX_DIGITS, "%d", three_pointers);
+    // visual overflow issue if >= 100
+    snprintf(assist_text, MAX_DIGITS + 1, "%d", assists);
+    snprintf(two_pt_text, MAX_DIGITS + 1, "%d", two_pointers);
+    snprintf(three_pt_text, MAX_DIGITS + 1, "%d", three_pointers);
     text_layer_set_text(assist_text_layer, assist_text);
     text_layer_set_text(two_pt_text_layer, two_pt_text);
     text_layer_set_text(three_pt_text_layer, three_pt_text);
@@ -177,5 +187,53 @@ static void add_divider(Layer* window_layer) {
         .size = { DIVIDER_WIDTH, bounds.size.h }
     });
     layer_add_child(window_layer, inverter_layer_get_layer(divider));
+}
+
+static void click_config_provider(void *context) {
+    window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+    window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+    window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+    window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_long_click_handler, NULL);
+    window_long_click_subscribe(BUTTON_ID_UP, 0, up_long_click_handler, NULL);
+    window_long_click_subscribe(BUTTON_ID_DOWN, 0, down_long_click_handler, NULL);
+}
+
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    assists++;
+    refresh_points();
+}
+
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+    two_pointers++;
+    refresh_points();
+}
+
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+    three_pointers++;
+    refresh_points();
+}
+
+static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (assists > 0) {
+        assists--;
+        refresh_points();
+        vibes_short_pulse();
+    }
+}
+
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (two_pointers > 0) {
+        two_pointers--;
+        refresh_points();
+        vibes_short_pulse();
+    }
+}
+
+static void down_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (three_pointers > 0) {
+        three_pointers--;
+        refresh_points();
+        vibes_short_pulse();
+    }
 }
 
