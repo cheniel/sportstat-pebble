@@ -89,6 +89,10 @@ Window *get_game_window() {
     return game_window;
 }
 
+void request_game_window_send() {
+    send_data_to_mobile(assists, two_pointers, three_pointers);
+}
+
 static void load(Window *window) {
     window_layer = window_get_root_layer(window);
     bounds = layer_get_bounds(window_layer);
@@ -242,4 +246,3 @@ static void down_long_click_handler(ClickRecognizerRef recognizer, void *context
         send_data_to_mobile(assists, two_pointers, three_pointers);
     }
 }
-

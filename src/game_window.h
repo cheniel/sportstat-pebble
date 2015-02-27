@@ -21,5 +21,6 @@
 Window *get_game_window();
 void update_game_window(int num_assists, int num_two_pointers,
                         int num_three_pointers);
+void request_game_window_send();
 
 #endif // GAME_H

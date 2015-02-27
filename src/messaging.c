@@ -23,6 +23,7 @@
 #define MSG_GAME_END 4
 #define MSG_GAME_CANCELLED 5
 #define MSG_REQUEST_RESPONSE 6
+#define MSG_INITIAL_POINTS_LOAD 7
 
 // ---------------- Macro definitions
 
@@ -77,10 +78,15 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *t = dict_read_first(iterator);
 
     bool received_score_data = false;
+    bool initial_points_load = false;
 
     int assist_count = 0;
     int two_pt_count = 0;
     int three_pt_count = 0;
+
+    // TODO: handle case where app is closed and user is logging on pebble.
+    // There should be some indicator that the data is populated from on resume
+    // if so, it should be ignored and the data from the pebble should be sent
 
     // Process all pairs present
     while (t != NULL) {
@@ -117,6 +123,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 // TODO: go to end game screen
                 break;
 
+            case MSG_INITIAL_POINTS_LOAD:
+                initial_points_load = true;
+                break;
         }
 
         // Get next pair, if any
@@ -124,12 +133,25 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
 
     if (received_score_data) {
+
+        // if it is the initial data from the phone but the pebble already
+        // has a game up, sync pebble data to phone and ignore message.
+        // this handles case where phone is locked and unlocked
+        if (game_window != NULL && initial_points_load) {
+            request_game_window_send();
+            return;
+        }
+
+        // open game window if it's not up
         if (game_window == NULL) {
             window_stack_pop(false);
             game_window = get_game_window();
             window_stack_push(game_window, true);
         }
+
+        // update the game window with the data from the phone
         update_game_window(assist_count, two_pt_count, three_pt_count);
+
     }
 
 }
@@ -144,6 +166,7 @@ static void outbox_fail_handler(DictionaryIterator *iterator,
     // if (reason != APP_MSG_OK) {
         // TODO: go to disconnected screen
         // only if game window is not null!
+        // also need to handle APP_MSG_BUSY, needs to be resent.
     // }
 }
 
