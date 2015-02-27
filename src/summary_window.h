@@ -18,6 +18,6 @@
 // ---------------- Public Variables
 
 // ---------------- Prototypes/Macros
-Window *get_summary_window(char* message);
+Window *get_summary_window(char* message, int assists, int two_pts, int three_pts);
 
 #endif // SUMMARY_H

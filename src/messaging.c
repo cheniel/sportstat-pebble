@@ -192,7 +192,8 @@ static void open_summary_window(char* message) {
         window_destroy(game_window);
         game_window = NULL;
     }
-    summary_window = get_summary_window(message);
+    summary_window = get_summary_window(message, get_game_assists(),
+        get_game_two_pts(), get_game_three_pts());
     window_stack_push(summary_window, true);
 }
 

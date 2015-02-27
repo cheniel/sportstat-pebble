@@ -93,6 +93,19 @@ void request_game_window_send() {
     send_data_to_mobile(assists, two_pointers, three_pointers);
 }
 
+int get_game_assists() {
+    return assists;
+}
+
+int get_game_two_pts() {
+    return two_pointers;
+}
+
+int get_game_three_pts() {
+    return three_pointers;
+}
+
+
 static void load(Window *window) {
     window_layer = window_get_root_layer(window);
     bounds = layer_get_bounds(window_layer);
