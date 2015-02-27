@@ -89,10 +89,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     int two_pt_count = 0;
     int three_pt_count = 0;
 
-    // TODO: handle case where app is closed and user is logging on pebble.
-    // There should be some indicator that the data is populated from on resume
-    // if so, it should be ignored and the data from the pebble should be sent
-
     // Process all pairs present
     while (t != NULL) {
 
