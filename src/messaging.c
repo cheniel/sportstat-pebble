@@ -21,6 +21,7 @@
 #define MSG_TWO_POINT_COUNT 2
 #define MSG_THREE_POINT_COUNT 3
 #define MSG_GAME_END 4
+#define MSG_IS_GAME_ACTIVE 5
 
 // ---------------- Macro definitions
 
@@ -98,6 +99,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 break;
 
             case MSG_GAME_END:
+                window_stack_pop(false);
+                window_destroy(game_window);
+                game_window = NULL;
                 // TODO: go to end game screen
                 break;
 
@@ -109,8 +113,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
     if (received_score_data) {
         if (game_window == NULL) {
+            window_stack_pop(false);
             game_window = get_game_window();
             window_stack_push(game_window, true);
+        } else {
+            // TODO: update score
         }
     }
     assist_count++;
@@ -142,4 +149,7 @@ void init_app_messaging() {
     app_message_register_outbox_sent(outbox_sent_handler);
     app_message_open(app_message_inbox_size_maximum(),
                    app_message_outbox_size_maximum());
+
+    // TODO: request if game is active
+    // make sure to correctly handle case where app is not open.
 }
