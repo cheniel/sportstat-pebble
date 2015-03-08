@@ -20,7 +20,7 @@
 // ---------------- Prototypes/Macros
 Window *get_game_window();
 void update_game_window(int num_assists, int num_two_pointers,
-                        int num_three_pointers);
+                        int num_three_pointers, int num_attempted_shots);
 void request_game_window_send();
 int get_game_assists();
 int get_game_two_pts();

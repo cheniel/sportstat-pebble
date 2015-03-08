@@ -25,6 +25,7 @@
 #define MSG_GAME_CANCELLED 5
 #define MSG_REQUEST_RESPONSE 6
 #define MSG_INITIAL_POINTS_LOAD 7
+#define MSG_ATTEMPTED_SHOTS 8
 
 #define GAME_END_MESSAGE "Game ended!"
 #define DISCONNECTED_MESSAGE "Disconnected."
@@ -68,6 +69,12 @@ void send_data_to_mobile(int assists, int two_pts, int three_pts) {
     app_message_outbox_send();
 }
 
+void send_attempted_shots(int attempted_shots) {
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    dict_write_int(iter, MSG_ATTEMPTED_SHOTS, &attempted_shots, sizeof(attempted_shots), false);
+    app_message_outbox_send();}
+
 static void request_response() {
     int dummy = 0;
     DictionaryIterator *iter;
@@ -88,6 +95,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     int assist_count = 0;
     int two_pt_count = 0;
     int three_pt_count = 0;
+    int attempted_shots = 0;
 
     // Process all pairs present
     while (t != NULL) {
@@ -115,6 +123,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             case MSG_THREE_POINT_COUNT:
                 received_score_data = true;
                 three_pt_count = t->value->int8;
+                break;
+
+            case MSG_ATTEMPTED_SHOTS:
+                received_score_data = true;
+                attempted_shots = t->value->int8;
                 break;
 
             case MSG_GAME_END:
@@ -154,7 +167,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         }
 
         // update the game window with the data from the phone
-        update_game_window(assist_count, two_pt_count, three_pt_count);
+        update_game_window(assist_count, two_pt_count, three_pt_count, attempted_shots);
 
     }
 

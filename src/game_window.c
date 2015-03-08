@@ -39,6 +39,9 @@
 #define THREE_PT_Y 115
 #define MAX_DIGITS 2
 
+#define NUM_SAMPLES 3
+#define NOT_SHOOTING_THRESHOLD 3
+
 // ---------------- Macro definitions
 
 // ---------------- Structures/Types
@@ -60,6 +63,9 @@ static char three_pt_text[MAX_DIGITS];
 static int assists = 0;
 static int two_pointers = 0;
 static int three_pointers = 0;
+static bool shooting;
+static int consecutive_not_shooting_readings = 0;
+static int attempted_shots = 0;
 
 // ---------------- Private prototypes
 static void load(Window *window);
@@ -75,6 +81,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context);
 static void up_long_click_handler(ClickRecognizerRef recognizer, void *context);
 static void select_long_click_handler(ClickRecognizerRef recognizer, void *context);
 static void down_long_click_handler(ClickRecognizerRef recognizer, void *context);
+static void accel_data_handler(AccelData *data, uint32_t num_samples);
 
 /* ========================================================================== */
 
@@ -86,7 +93,61 @@ Window *get_game_window() {
         .unload = unload,
     });
 
+    accel_data_service_subscribe(NUM_SAMPLES, accel_data_handler);
+    accel_service_set_sampling_rate(ACCEL_SAMPLING_50HZ);
+
     return game_window;
+}
+
+static void accel_data_handler(AccelData *data, uint32_t num_samples) {
+
+    // detect shooting
+    if (
+        // hand is up
+        data[0].x < -900 &&
+        data[1].x < -900 &&
+        data[2].x < -900 &&
+
+        // not too much tilt
+        (data[0].z > -500 && data[0].z < 500) &&
+        (data[1].z > -500 && data[1].z < 500) &&
+        (data[2].z > -500 && data[2].z < 500) &&
+        (data[0].y > -500 && data[0].y < 500) &&
+        (data[1].y > -500 && data[1].y < 500) &&
+        (data[2].y > -500 && data[2].y < 500) ) {
+
+        // not not shooting, so reset counter
+        consecutive_not_shooting_readings = 0;
+
+        // if not already shooting, mark the user as shooting
+        if (!shooting) {
+            shooting = true;
+            vibes_short_pulse();
+            send_attempted_shots(++attempted_shots);
+        }
+
+    // detect no longer shooting, hand is down
+    } else if (data[0].x > -100 &&
+               data[1].x > -100 &&
+               data[2].x > -100 ) {
+
+        // mark play as not shooting if they have enough consecutive
+        // not shooting readings
+        if (shooting) {
+            consecutive_not_shooting_readings++;
+            if (consecutive_not_shooting_readings > NOT_SHOOTING_THRESHOLD) {
+                shooting = false;
+                consecutive_not_shooting_readings = 0;
+            }
+        }
+
+    } else {
+
+        // not not shooting, so reset counter
+        consecutive_not_shooting_readings = 0;
+
+    }
+
 }
 
 void request_game_window_send() {
@@ -126,10 +187,11 @@ static void unload(Window *window) {
 }
 
 void update_game_window(int num_assists, int num_two_pointers,
-                        int num_three_pointers) {
+                        int num_three_pointers, int num_attempted_shots) {
     assists = num_assists;
     two_pointers = num_two_pointers;
     three_pointers = num_three_pointers;
+    attempted_shots = num_attempted_shots;
 
     refresh_points();
 }
