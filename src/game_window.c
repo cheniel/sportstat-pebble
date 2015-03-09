@@ -185,6 +185,7 @@ static void unload(Window *window) {
     text_layer_destroy(two_pt_text_layer);
     text_layer_destroy(three_pt_text_layer);
     inverter_layer_destroy(divider);
+    accel_data_service_unsubscribe();
 }
 
 void update_game_window(int num_assists, int num_two_pointers,
