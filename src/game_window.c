@@ -152,6 +152,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
 void request_game_window_send() {
     send_data_to_mobile(assists, two_pointers, three_pointers);
+    send_attempted_shots(attempted_shots);
 }
 
 int get_game_assists() {
