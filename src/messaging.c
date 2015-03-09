@@ -185,7 +185,7 @@ static void outbox_fail_handler(DictionaryIterator *iterator,
         if (reason == APP_MSG_BUSY ) {
             request_game_window_send();
         } else {
-            open_summary_window(DISCONNECTED_MESSAGE);
+            // open_summary_window(DISCONNECTED_MESSAGE);
         }
     }
 }
