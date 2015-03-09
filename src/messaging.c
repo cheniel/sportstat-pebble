@@ -72,7 +72,7 @@ void send_data_to_mobile(int assists, int two_pts, int three_pts) {
 void send_attempted_shots(int attempted_shots) {
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
-    dict_write_int(iter, MSG_ATTEMPTED_SHOTS, &attempted_shots, sizeof(attempted_shots), false);
+    dict_write_int(iter, MSG_ATTEMPTED_SHOTS, &attempted_shots, sizeof(attempted_shots), true);
     app_message_outbox_send();}
 
 static void request_response() {

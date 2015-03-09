@@ -63,7 +63,7 @@ static char three_pt_text[MAX_DIGITS];
 static int assists = 0;
 static int two_pointers = 0;
 static int three_pointers = 0;
-static bool shooting;
+static bool shooting = false;
 static int consecutive_not_shooting_readings = 0;
 static int attempted_shots = 0;
 
@@ -121,9 +121,10 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
         // if not already shooting, mark the user as shooting
         if (!shooting) {
+            attempted_shots++;
             shooting = true;
             vibes_short_pulse();
-            send_attempted_shots(++attempted_shots);
+            send_attempted_shots(attempted_shots);
         }
 
     // detect no longer shooting, hand is down
